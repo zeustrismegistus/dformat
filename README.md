@@ -1,11 +1,12 @@
 # dformat
 yet another data format.  this one: normalizes data avoiding pyramid of doom; has visually inspectable format; is easily indexed; presents data in a consistent idiom; has inherent anti-corruption checks with exact parsing instructions
 
+
 first line of the file
-  # of objects
+  number of objects
 
 first line of every object
-  O{object #}T{type.length}:typeL{memberCount.length}:memberCount
+  O{object no.}T{type.length}:typeL{memberCount.length}:memberCount
 
 member lines
   M{memberName.length}:memberNameT{memberType.length}:memberTypeV{memberValue.length}:{memberValue}
