@@ -37,11 +37,11 @@ array member lines (these immediately follow the member line that declares them)
     {
       name: "zeus",
       location : "olympus",
-      friends : 
+      friends :[ 
       {
         name : "hera",
         age : "how dare you ask?"
-      }
+      }]
     }
 
 
