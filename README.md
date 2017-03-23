@@ -1,15 +1,32 @@
 # dformat
-yet another data format.  this one: normalizes data avoiding pyramid of doom; has visually inspectable format; is easily indexed; presents data in a consistent idiom; has inherent anti-corruption checks with exact parsing instructions
+Yet another data format.  
+
+	- normalizes data avoiding pyramid of doom; has visually inspectable format 
+
+	- is easily indexed
+
+	- presents data in a consistent idiom; has inherent anti-corruption checks with exact parsing instructions.
 
 
-		first line of the file:
-			
+	
+
+usage:
+
+		var dformat = require('d__format.js');
+		dformat.serialize(...);
+		dformat.deserialize(...);
+
+design:
+
+Objects are converted into an intermediate meta form that models the object/properties as nested nodes.  "Container models" of object and array are given id values.  All models are given parentId values.  Each property is broken out as a Type/Value/Name tuple, with graph location indicated by the parentId/id tuple.  
+
+layout:
+
+		first line of the file: 
 			number of objects
 		
 		
-		each line is prefixed with length information about how to parse the line
-		
-		[P,I,T,V,N]
+		each line is prefixed with length information about how to parse the line ie. [P,I,T,V,N]
 		
 		where:
 				P is the parent id 
