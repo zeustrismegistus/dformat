@@ -8,8 +8,6 @@ Yet another data format.
 	- presents data in a consistent idiom; has inherent anti-corruption checks with exact parsing instructions.
 
 
-	
-
 usage:
 
 		var dformat = require('d__format.js');
