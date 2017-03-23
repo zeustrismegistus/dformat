@@ -68,7 +68,7 @@
 				throw "invalid recursion";
 			
 			var id = registry.push(this);
-			this.id = id;
+			this.id = id.toString();
 			
 			//handle the models of object and arrays as if they are containers of other objects
 			if(this.type === "object")
@@ -141,9 +141,9 @@
 			if(this.id)
 			{
 				//at this point we assume the model graph is wired together correctly, but the model.instance values are not wired up
-				for(var i=0; i < childModels.length; i++)
+				for(var i=0; i < this.childModels.length; i++)
 				{
-					var childModel = childModels[i];
+					var childModel = this.childModels[i];
 					setInstanceFromTypeValue(childModel);
 					
 					//if it's a node, look up the value
@@ -267,7 +267,7 @@
 		{
 			if(node.type == "undefined")
 			{	
-				node.instance undefined;
+				node.instance = undefined;
 			}
 			else if(node.type === "boolean")
 			{
@@ -322,7 +322,7 @@
 		//publics
 		this.serialize = function(obj)
 		{
-			jsmeta.validateNotNullOrUndefined(obj);
+			jsmeta.validators.validateNotNullOrUndefined(obj);
 			var registry = [];
 			
 			var rootModel = new Model();
@@ -342,12 +342,12 @@
 					reportLines.push(getLine(itemModel));
 				}
 			}
-			return reportLines.join("\r\n");
+			return reportLines.join("__EOL__\r\n");
 		};
 		
 		this.deserialize = function(data)
 		{
-			var lines = data.split("\r\n");
+			var lines = data.split("__EOL__\r\n");
 			var length = lines.shift();
 			
 			//parse the lines
@@ -357,9 +357,9 @@
 			
 			//build the registry of stubs
 			var registry = [];
-			for(var i=0; i<parsedLines[i]; i++)
+			for(var i=0; i<parsedLines.length; i++)
 			{
-				var line = parsdLines[i];
+				var line = parsedLines[i];
 				if(!line.id)
 					continue;
 				
@@ -371,9 +371,9 @@
 			}
 			
 			//hydrate the models
-			for(var i=0; i<parsedLines[i]; i++)
+			for(var i=0; i<parsedLines.length; i++)
 			{
-				var line = parsdLines[i];
+				var line = parsedLines[i];
 				if(line.id)
 					continue;
 				
@@ -383,15 +383,16 @@
 				model.name = line.name;
 				model.value = line.value;
 				
-				if(model.parentId)
+				if(line.parentId)
 				{	
-					parentModel = findNodeById(registry, model.parentId);
+					parentModel = findNodeById(registry, line.parentId);
+					model.parentModel = parentModel;
 					parentModel.childModels.push(model);
 				}
 			}
 			
 			//get the root model
-			var rootModel = registry[o];
+			var rootModel = registry[0];
 			
 			//wire it
 			rootModel.hydrateFromState(registry);
@@ -412,18 +413,19 @@
 				
 			return null;
 		}
-		//[P,T,V,N]	
+		//[P,I,T,V,N]	
 		function getLine(model)
 		{
 			var parentId = "";
 			if(model.parentModel)
 				parentId = model.parentModel.id;
-			var type = model.type;
+			var type = model.type || "";
 			var name = model.name || "";
-			var value = model.value;
+			var value =  model.value || "" ;
+			var id = model.id || "";
 			
-			var prefix = "[" + [parentId.length, type.length, value.length, name.length].join(",") + "]";
-			var data = [parentId, type, value, name].join("|");
+			var prefix = "[" + [parentId.length, id.length, type.length, value.length, name.length].join(",") + "]";
+			var data = [parentId, id, type, value, name].join("|");
 
 			return prefix + data;
 		}
@@ -433,15 +435,17 @@
 				throw "invalid line";
 			
 			var dataIdx1 = line.indexOf("]");
-			var suffix = line.substring(1, dataIdx1) - 1);
+			var suffix = line.substring(1, dataIdx1);
 			var suffixArr = suffix.split(",");
+			suffixArr = suffixArr.map((x)=>{return parseInt(x);});
 			
-			var parentId = "" + line.substr(dataIdx1, suffixArr[0]);
-			var type = "" + line.substr(dataIdx1 + suffixArr[0] + 1, suffixArr[1]);
-			var value = "" + line.substr(dataIdx1 + suffixArr[0] + suffixArr[1] + 2, suffixArr[2]);
-			var name = "" + line.substr(dataIdx1 + suffixArr[0] + suffixArr[1] + suffixArr[2] + 3, suffixArr[3]);
+			var parentId = "" + line.substr(dataIdx1 + 1, suffixArr[0]);
+			var id = "" + line.substr(dataIdx1 + 1 + suffixArr[0] + 1, suffixArr[1]);
+			var type = "" + line.substr(dataIdx1 + 1 + suffixArr[0] + suffixArr[1] + 2, suffixArr[2]);
+			var value = "" + line.substr(dataIdx1 + 1+ suffixArr[0] + suffixArr[1] + suffixArr[2] + 3, suffixArr[3]);
+			var name = "" + line.substr(dataIdx1 + 1+ suffixArr[0] + suffixArr[1] + suffixArr[2] + suffixArr[3] + 4, suffixArr[4]);
 			
-			return {parentId : parentId, type: type, value: value, name: name};
+			return {parentId : parentId, id:id, type: type, value: value, name: name};
 		}
 		
 	}
