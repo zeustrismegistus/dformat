@@ -1,6 +1,5 @@
 # dformat
 Yet another data format.  
-<<<<<<< HEAD
 
 	- normalizes data avoiding pyramid of doom; has visually inspectable format 
 
@@ -18,25 +17,7 @@ usage:
 design:
 
 Objects are converted into an intermediate meta form that models the object/properties as nested nodes.  "Container models" of object and array are given id values.  All models are given parentId values.  Each property is broken out as a Type/Value/Name tuple, with graph location indicated by the parentId/id tuple.  
-=======
-	- normalizes data avoiding pyramid of doom; has visually inspectable format 
-	- is easily indexed
-	- presents data in a consistent idiom; has inherent anti-corruption checks with exact parsing instructions.
 
-	
-
-usage:
-
-var dformat = require('d__format.js');
-dformat.serialize(...);
-dformat.deserialize(...);
-
-design:
-
-	Objects are converted into an intermediate meta form that models the object/properties as nested nodes.  "Container models" of object and array
-	are given id values.  All models are given parentId values.  Each property is broken out as a Type/Value/Name tuple, with graph location 
-	indicated by the parentId/id tuple.  
->>>>>>> bd88b6ffa856843397e017c0d4b997fa47e2886f
 
 layout:
 
