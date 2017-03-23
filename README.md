@@ -2,12 +2,16 @@
 yet another data format.  this one: normalizes data avoiding pyramid of doom; has visually inspectable format; is easily indexed; presents data in a consistent idiom; has inherent anti-corruption checks with exact parsing instructions
 
 
-first line of the file:
+		first line of the file:
+			
 			number of objects
 		
+		
 		each line is prefixed with length information about how to parse the line
+		
 		[P,I,T,V,N]
-			where:
+		
+		where:
 				P is the parent id 
 				I is the length of .id (only objects and arrays will set this) 
 				T is the length of .type
