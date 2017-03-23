@@ -8,9 +8,10 @@
 			number of objects
 		
 		each line is prefixed with length information about how to parse the line
-		[P,T,V,N]
+		[P,I,T,V,N]
 			where:
-				P is the parent id
+				P is the parent id 
+				I is the length of .id (only objects and arrays will set this) 
 				T is the length of .type
 				V is the length of .value
 				N is the length of .name, if there is one
@@ -35,15 +36,16 @@
 		}
 		
 		encodes to:
-		[P,T,V,N]			
-		[1,1,1,0]0|object|1||
-		[1,5,4,4]1|string|zeus|name
-		[1,5,7,8]1|string|olympus|location
-		[1,5,1,7]1|array|2|friends
-		[1,1,1,0]1|array|2||
-		[1,1,1,0]2|object|3||
-		[1,5,4,4]3|string|hera|name
-		[1,5,17,3]3|string|age|how dare you ask?
+		3__EOL__
+		[0,1,6,0,0]|1|object||__EOL__
+		[1,0,6,4,4]1||string|zeus|name__EOL__
+		[1,0,6,7,8]1||string|olympus|location__EOL__
+		[1,0,5,1,7]1||array|2|friends__EOL__
+		[0,1,5,0,0]|2|array||__EOL__
+		[1,0,6,1,0]2||object|3|__EOL__
+		[0,1,6,0,0]|3|object||__EOL__
+		[1,0,6,4,4]3||string|hera|name__EOL__
+		[1,0,6,17,3]3||string|how dare you ask?|age
 		
 	*/
 	
@@ -149,7 +151,7 @@
 					//if it's a node, look up the value
 					if(childModel.type === "object" || childModel.type === "array")
 					{
-						var objModel = findNodeById(childModel.value);
+						var objModel = findNodeById(registry, childModel.value);
 						if(!objModel)
 							throw "kack";
 						
