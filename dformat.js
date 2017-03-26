@@ -246,7 +246,7 @@
 				else if(val instanceof Date)
 				{
 					node.type = "date";
-					node.value = val.getTime();  
+					node.value = val.getTime().toString();  
 				}
 				else if(val instanceof Array)
 				{
@@ -273,11 +273,11 @@
 			}
 			else if(node.type === "boolean")
 			{
-				node.instance = new Boolean(node.value);
+				node.instance = Boolean(node.value);
 			}
 			else if (node.type === "number")
 			{
-				node.instance = new Number(node.value);
+				node.instance = Number(node.value);
 			}
 			else if (node.type === "string")
 			{
@@ -299,7 +299,7 @@
 			}
 			else if(node.type === "date")
 			{
-				node.instance = new Date(node.value)
+				node.instance = new Date(Number(node.value))
 			}
 			else if(node.type === "array")
 			{
