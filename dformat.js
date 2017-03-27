@@ -376,18 +376,67 @@
 					reportLines.push(getLine(itemModel));
 				}
 			}
-			return reportLines.join("__EOL__\r\n");
+			return reportLines.join("\r\n");
 		};
+		
+		function readToText(source, tag)
+		{
+			var idx = source.indexOf(tag);
+			if(idx == -1)
+			{
+				return {match:null};
+			}		
+			else
+			{
+				return {match:source.substring(0,idx),remainder:source.substr(idx + tag.length)};
+			}
+		}
+		function parseNextLine(source)
+		{
+			/* $lab:coverage:off$ */
+			if(!source.startsWith("["))
+				throw "invalid source";
+			/* $lab:coverage:on$ */
+				
+			var dataIdx1 = source.indexOf("]");
+			var suffix = source.substring(1, dataIdx1);
+			var suffixArr = suffix.split(",");
+			suffixArr = suffixArr.map((x)=>{return parseInt(x);});
+			
+			var parentId = "" + source.substr(dataIdx1 + 1, suffixArr[0]);
+			var id = "" + source.substr(dataIdx1 + 1 + suffixArr[0] + 1, suffixArr[1]);
+			var type = "" + source.substr(dataIdx1 	+ 1 + suffixArr[0] + 1 + suffixArr[1] + 1, suffixArr[2]);
+			var value = "" + source.substr(dataIdx1 + 1	+ suffixArr[0] + 1 + suffixArr[1] + 1 + suffixArr[2] + 1, suffixArr[3]);
+			var name = "" + source.substr(dataIdx1 	+ 1	+ suffixArr[0] + 1 + suffixArr[1] + 1 + suffixArr[2] + 1 + suffixArr[3] + 1, suffixArr[4]);
+			
+			//truncate source, removing the line we've just parsed
+			var lineLength = dataIdx1 + 1 + suffixArr[0] + 1 + suffixArr[1] + 1 + suffixArr[2] + 1 + suffixArr[3] + 1 + suffixArr[4] + 2;
+			//console.log("parsed " + source.substr(0, lineLength));  
+			
+			var remainder = "";
+			if(source.length > lineLength)
+				remainder = source.substr(lineLength);
+			
+			return {remainder:remainder, line: {parentId : parentId, id:id, type: type, value: value, name: name}};
+		}
 		
 		this.deserialize = function(data)
 		{
-			var lines = data.split("__EOL__\r\n");
-			var length = lines.shift();
+			var line1 = readToText(data,"\r\n");
+			if(!line1.match)
+				throw new Error("invalid header row"); 
+			
+			var objCount = Number(line1.match);
 			
 			//parse the lines
 			var parsedLines = [];
-			for(var i=0; i< lines.length; i++)
-				parsedLines.push(parseLine(lines[i]));
+			var data = line1.remainder;
+			while(data !== "")
+			{
+				var parsedLine = parseNextLine(data);
+				parsedLines.push(parsedLine.line);
+				data = parsedLine.remainder;
+			}
 			
 			//build the registry of stubs
 			var registry = [];

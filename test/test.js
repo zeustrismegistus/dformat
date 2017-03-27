@@ -140,6 +140,10 @@ describe('using dformat', () => {
 		
 		TestObjTester.test(target[1].o);
 		
+		//serialize some serialized text 
+		var data2= dformat.serialize({data:data,obj:testObj});
+		var target2 = dformat.deserialize(data2);
+		expect(target2.data).to.equal(data);
 		
 		done();
     });	
