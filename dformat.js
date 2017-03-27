@@ -66,8 +66,10 @@
 			this.instance = val;
 			setTypeValueFromInstance(this);
 		
+			/* $lab:coverage:off$ */
 			if(!(this.type === "object" || this.type === "array"))
-				throw "invalid recursion";
+				throw new Error("invalid recursion");
+			/* $lab:coverage:on$ */
 			
 			var id = registry.push(this);
 			this.id = id.toString();
@@ -75,7 +77,7 @@
 			//handle the models of object and arrays as if they are containers of other objects
 			if(this.type === "object")
 			{
-				for(p in val)
+				for(var p in val)
 				{
 					var item = val[p];
 					var itemModel = new Model();
@@ -103,8 +105,13 @@
 					}
 				}
 			}
-			else if(this.type === "array")
+			else 
 			{
+				/* $lab:coverage:off$ */
+				if(this.type !== "array")
+					throw new Error("array expected");
+				/* $lab:coverage:on$ */
+					
 				for(var i=0; i<val.length;i++)
 				{
 					var item = val[i];
@@ -140,74 +147,100 @@
 			setInstanceFromTypeValue(this);
 			
 			//we only worry about children if we're a parent (ie. an object or an array)
-			if(this.id)
+			/* $lab:coverage:off$ */
+			if(!this.id)
 			{
-				//at this point we assume the model graph is wired together correctly, but the model.instance values are not wired up
-				for(var i=0; i < this.childModels.length; i++)
-				{
-					var childModel = this.childModels[i];
-					setInstanceFromTypeValue(childModel);
-					
-					//if it's a node, look up the value
-					if(childModel.type === "object" || childModel.type === "array")
-					{
-						var objModel = findNodeById(registry, childModel.value);
-						if(!objModel)
-							throw "kack";
-						
-						//if we haven't set instance yet on it, do so
-						if(!objModel.instance)
-							objModel.hydrateFromState(registry);	//recurse
-						
-						childModel.instance = objModel.instance;
-					}				
-					
-					//wire up the instances
-					if(this.type === "object")
-					{
-						this.instance[childModel.name] = childModel.instance;
-					}
-					else if(this.type == "array")
-					{
-						this.instance.push(childModel.instance);
-					}
-				}	
+				throw new Error("id expected");
 			}
+			/* $lab:coverage:on$ */
+		
+			//at this point we assume the model graph is wired together correctly, but the model.instance values are not wired up
+			for(var i=0; i < this.childModels.length; i++)
+			{
+				var childModel = this.childModels[i];
+				setInstanceFromTypeValue(childModel);
+				
+				//if it's a node, look up the value
+				if(childModel.type === "object" || childModel.type === "array")
+				{
+					var objModel = findNodeById(registry, childModel.value);
+					
+					/* $lab:coverage:off$ */
+					if(!objModel)
+						throw new Error("object expected");
+					/* $lab:coverage:on$ */
+					
+					//if we haven't set instance yet on it, do so
+					if(!objModel.instance)
+						objModel.hydrateFromState(registry);	//recurse
+					
+					childModel.instance = objModel.instance;
+				}				
+				
+				//wire up the instances
+				if(this.type === "object")
+				{
+					this.instance[childModel.name] = childModel.instance;
+				}
+				else 
+				{
+					/* $lab:coverage:off$ */
+					if(this.type !== "array")
+						throw new Error("expected array");
+					/* $lab:coverage:on$ */
+					
+					this.instance.push(childModel.instance);
+				}
+			}	
+		
 			
 		}
 		
 		//helper functions
 		function findNodeById(registry, id)
 		{
+			/*
 			if(!id)
 				return null;
+			*/
 			
 			for(var i=0; i< registry.length; i++)
 				if(registry[i].id === id)
 					return registry[i];
-				
+			
+			/* $lab:coverage:off$ */			
 			return null;
+			/* $lab:coverage:on$ */
 		}
 		function findNodeByInstance(registry, instance)
 		{
+			/*
 			if(!instance)
 				return null;
+			*/
 			
 			for(var i=0; i< registry.length; i++)
 				if(registry[i].instance === instance)
 					return registry[i];
-				
+			
+			/* $lab:coverage:off$ */			
 			return null;
+			/* $lab:coverage:on$ */
 		}
 		
 		//hydrates type and value properties from a value
 		function setTypeValueFromInstance(node)
 		{
 			var val = node.instance;
-			if(val == undefined)
+			if(val === undefined)
 			{	
 				node.type = "undefined";
 				node.value = "undefined";
+			}
+			else if(val === null)
+			{
+				node.type = "null";
+				node.value = "null";
 			}
 			else
 			{
@@ -231,17 +264,12 @@
 				else if (valType === "symbol")
 				{
 					node.type = "symbol";
-					node.value =  val;
+					node.value =  val.toString();
 				}
 				else if(valType === "function")
 				{
 					node.type = "function";
 					node.value =  val.toString();
-				}
-				else if(valType === "undefined")
-				{
-					node.type = "null";
-					node.value = "null";
 				}
 				else if(val instanceof Date)
 				{
@@ -285,7 +313,7 @@
 			}
 			else if (node.type === "symbol")
 			{
-				node.instance = node.value;
+				node.instance = Symbol(node.value);
 			}
 			else if(node.type === "function")
 			{
@@ -314,7 +342,11 @@
 				node.instance = {};
 			}			
 			else
-				throw "can't set instance";
+			{
+				/* $lab:coverage:off$ */
+				throw new Error("can't set instance");
+				/* $lab:coverage:on$ */
+			}		
 		}
 		
 	}
@@ -385,12 +417,15 @@
 				model.name = line.name;
 				model.value = line.value;
 				
-				if(line.parentId)
-				{	
-					parentModel = findNodeById(registry, line.parentId);
-					model.parentModel = parentModel;
-					parentModel.childModels.push(model);
-				}
+				/* $lab:coverage:off$ */
+				if(!line.parentId)
+					throw new Error("parent expected");
+				/* $lab:coverage:on$ */
+					
+				var parentModel = findNodeById(registry, line.parentId);
+				model.parentModel = parentModel;
+				parentModel.childModels.push(model);
+			
 			}
 			
 			//get the root model
@@ -406,14 +441,18 @@
 		//helpers
 		function findNodeById(registry, id)
 		{
+			/*
 			if(!id)
 				return null;
+			*/
 			
 			for(var i=0; i< registry.length; i++)
 				if(registry[i].id === id)
 					return registry[i];
 				
+			/* $lab:coverage:off$ */	
 			return null;
+			/* $lab:coverage:on$ */
 		}
 		//[P,I,T,V,N]	
 		function getLine(model)
@@ -421,7 +460,8 @@
 			var parentId = "";
 			if(model.parentModel)
 				parentId = model.parentModel.id;
-			var type = model.type || "";
+		
+			var type = model.type;
 			var name = model.name || "";
 			var value =  model.value || "" ;
 			var id = model.id || "";
@@ -433,9 +473,11 @@
 		}
 		function parseLine(line)
 		{
+			/* $lab:coverage:off$ */
 			if(!line.startsWith("["))
 				throw "invalid line";
-			
+			/* $lab:coverage:on$ */
+				
 			var dataIdx1 = line.indexOf("]");
 			var suffix = line.substring(1, dataIdx1);
 			var suffixArr = suffix.split(",");
@@ -455,6 +497,7 @@
 	//wire up the exports
 	var serializer = new ModelFormatter();
 	
+	/* $lab:coverage:off$ */
 	// Node.js
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = serializer;
@@ -469,6 +512,6 @@
     else {
         this.serializer = serializer;
     }
-	
+	/* $lab:coverage:on$ */
 })();
 	
