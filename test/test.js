@@ -46,7 +46,8 @@ describe('using dformat', () => {
 			propCircular : {things:[testObj, testObj]},
 			propNull : null,
 			propUndefined : undefined,
-			propContainerChain : {top:[{top:[{top:'top'}]}]}
+			propContainerChain : {l1:[{l2:[{l3:'top'}]}]},
+			propArrayContainerChain : [1,[2,[3,[4,[5]]]]]
 		};
 		testObj["testFn2"] = function testFn2_fake() 
 		{ 
@@ -92,6 +93,12 @@ describe('using dformat', () => {
 		  }]
 		};
 		var data2 = dformat.serialize(jsonTestObj)
+		
+		//test 3
+		var arrObj = [jsonTestObj, testObj];
+		var data3 = dformat.serialize(arrObj);
+		var arrObjClone = dformat.deserialize(data3);
+		
 		
 		done();
     });	
