@@ -63,12 +63,14 @@
 		
 		this.hydrateFromValue = function(val, registry)
 		{
+			jsmeta.validators.validateIsArray(registry);
+			
 			this.instance = val;
 			setTypeValueFromInstance(this);
 		
 			/* $lab:coverage:off$ */
 			if(!(this.type === "object" || this.type === "array"))
-				throw new Error("invalid recursion");
+				return;
 			/* $lab:coverage:on$ */
 			
 			var id = registry.push(this);
@@ -96,9 +98,8 @@
 						//we don't have a model, so we have to recurse, and append to the registry
 						if(!regModel)
 						{
-							var objModel = new Model();
-							objModel.hydrateFromValue(item, registry);
-							regModel = objModel;
+							regModel = new Model();
+							regModel.hydrateFromValue(item, registry);
 						}					
 						
 						itemModel.value = regModel.id;
@@ -130,9 +131,8 @@
 						//we don't have a model, so we have to recurse, and append to the registry
 						if(!regModel)
 						{
-							var objModel = new Model();
-							objModel.hydrateFromValue(item, registry);
-							regModel = objModel;
+							regModel = new Model();
+							regModel.hydrateFromValue(item, registry);
 						}					
 						
 						itemModel.value = regModel.id;
@@ -199,33 +199,22 @@
 		//helper functions
 		function findNodeById(registry, id)
 		{
-			/*
-			if(!id)
-				return null;
-			*/
+			var rv = null;
+			registry.forEach((e,i,a)=>{
+				if(e.id === id)
+					rv = e;
+			});
 			
-			for(var i=0; i< registry.length; i++)
-				if(registry[i].id === id)
-					return registry[i];
-			
-			/* $lab:coverage:off$ */			
-			return null;
-			/* $lab:coverage:on$ */
+			return rv;
 		}
 		function findNodeByInstance(registry, instance)
 		{
-			/*
-			if(!instance)
-				return null;
-			*/
-			
-			for(var i=0; i< registry.length; i++)
-				if(registry[i].instance === instance)
-					return registry[i];
-			
-			/* $lab:coverage:off$ */			
-			return null;
-			/* $lab:coverage:on$ */
+			var rv = null;
+			registry.forEach((e,i,a)=>{
+				if(e.instance === instance)
+					rv = e;
+			});
+			return rv;
 		}
 		
 		//hydrates type and value properties from a value
@@ -337,16 +326,16 @@
 			{
 				node.instance = {};
 			}
-			else if(node.type === "object")
-			{
-				node.instance = {};
-			}			
-			else
+			else 
 			{
 				/* $lab:coverage:off$ */
-				throw new Error("can't set instance");
+				if(node.type !== "object")
+					throw new Error("object expected");
 				/* $lab:coverage:on$ */
-			}		
+				
+				node.instance = {};
+			}			
+
 		}
 		
 	}
@@ -423,8 +412,11 @@
 		this.deserialize = function(data)
 		{
 			var line1 = readToText(data,"\r\n");
+			
+			/* $lab:coverage:off$ */
 			if(!line1.match)
 				throw new Error("invalid header row"); 
+			/* $lab:coverage:on$ */
 			
 			var objCount = Number(line1.match);
 			
@@ -438,7 +430,7 @@
 				data = parsedLine.remainder;
 			}
 			
-			//build the registry of stubs
+			//build the registry of unhydrated models
 			var registry = [];
 			for(var i=0; i<parsedLines.length; i++)
 			{
@@ -462,7 +454,6 @@
 				
 				var model = new Model();
 				model.type = line.type;
-				model.id = line.id;
 				model.name = line.name;
 				model.value = line.value;
 				
@@ -490,18 +481,14 @@
 		//helpers
 		function findNodeById(registry, id)
 		{
-			/*
-			if(!id)
-				return null;
-			*/
+			var rv = null;
 			
-			for(var i=0; i< registry.length; i++)
-				if(registry[i].id === id)
-					return registry[i];
+			registry.forEach((e,i,a)=>{
+				if(e.id === id)
+					rv = e;
+			});
 				
-			/* $lab:coverage:off$ */	
-			return null;
-			/* $lab:coverage:on$ */
+			return rv;
 		}
 		//[P,I,T,V,N]	
 		function getLine(model)
@@ -520,26 +507,7 @@
 
 			return prefix + data;
 		}
-		function parseLine(line)
-		{
-			/* $lab:coverage:off$ */
-			if(!line.startsWith("["))
-				throw "invalid line";
-			/* $lab:coverage:on$ */
-				
-			var dataIdx1 = line.indexOf("]");
-			var suffix = line.substring(1, dataIdx1);
-			var suffixArr = suffix.split(",");
-			suffixArr = suffixArr.map((x)=>{return parseInt(x);});
-			
-			var parentId = "" + line.substr(dataIdx1 + 1, suffixArr[0]);
-			var id = "" + line.substr(dataIdx1 + 1 + suffixArr[0] + 1, suffixArr[1]);
-			var type = "" + line.substr(dataIdx1 + 1 + suffixArr[0] + suffixArr[1] + 2, suffixArr[2]);
-			var value = "" + line.substr(dataIdx1 + 1+ suffixArr[0] + suffixArr[1] + suffixArr[2] + 3, suffixArr[3]);
-			var name = "" + line.substr(dataIdx1 + 1+ suffixArr[0] + suffixArr[1] + suffixArr[2] + suffixArr[3] + 4, suffixArr[4]);
-			
-			return {parentId : parentId, id:id, type: type, value: value, name: name};
-		}
+
 		
 	}
 

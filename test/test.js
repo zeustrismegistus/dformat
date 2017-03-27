@@ -145,6 +145,14 @@ describe('using dformat', () => {
 		var target2 = dformat.deserialize(data2);
 		expect(target2.data).to.equal(data);
 		
+		//edge
+		expect(function(){dformat.deserialize('junkdata');}).to.throw(Error,"invalid header row");
+		
+		var data3 = dformat.serialize('junkdata');
+		
+		var data4 = dformat.serialize([{a:'a',b:[1,2,3], c:{a:1,b:2}, d:testObj}, [4,5,6, testObj, {}]]);
+		var target4 = dformat.deserialize(data4);
+		
 		done();
     });	
 	
